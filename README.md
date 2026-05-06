@@ -288,9 +288,10 @@ bash scripts/benchmark_3d3d_modelnet.sh
 # Citation
 If you find this repository useful in your research, please consider giving a star ⭐ and a citation
 ```bibtex
-@article{goswami2026unicorrn,
+@inproceddings{goswami2026unicorrn,
   title={UniCorrn: Unified Correspondence Transformer Across 2D and 3D},
   author={Goswami, Prajnan and Ding, Tianye and Liu, Feng and Jiang, Huaizu},
+  booktitle={CVPR},
   year={2026}
 }
 ```
