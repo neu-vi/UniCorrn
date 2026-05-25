@@ -171,7 +171,7 @@ __2D-3D__
 
 We follow [2D3DMATR](https://github.com/minhaolee/2D3DMATR) to prepare the 2D-3D datasets.
 
-The __7Scenes__ dataset can be downloaded from [BaiduYun](https://pan.baidu.com/s/1duymPG4dJte4Yx-qov5yeg) (extraction code: `m7mc`). Place it under `data/Datasets/` and organize as follows:
+The __7Scenes__ dataset can be downloaded from [HuggingFace](https://huggingface.co/datasets/prajnan/preprocessed_2d3d/resolve/main/7Scenes.zip). Unzip and place it under `data/Datasets/` and organize as follows:
 
 ```text
 data/Datasets/
@@ -187,7 +187,7 @@ data/Datasets/
         └── stairs/
 ```
 
-The __RGBD-ScenesV2__ dataset can be downloaded from [BaiduYun](https://pan.baidu.com/s/14A2y8jghCdk6nAZa0_yEZA) (extraction code: `2dc7`). Place it under `data/Datasets/` and organize as follows:
+The __RGBD-ScenesV2__ dataset can be downloaded from [HuggingFace](https://huggingface.co/datasets/prajnan/preprocessed_2d3d/resolve/main/RGBDScenesV2.zip). Unzip and place it under `data/Datasets/` and organize as follows:
 
 ```text
 data/Datasets/
