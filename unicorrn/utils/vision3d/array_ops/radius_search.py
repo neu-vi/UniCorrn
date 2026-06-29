@@ -1,7 +1,16 @@
 from ..utils.misc import load_ext
 
 
-ext_module = load_ext("vision3d.ext", ["radius_neighbors"])
+# Lazily load the compiled `vision3d.ext` extension (see grid_subsample.py):
+# only needed for raw point-cloud preprocessing, never for the model forward.
+ext_module = None
+
+
+def _get_ext_module():
+    global ext_module
+    if ext_module is None:
+        ext_module = load_ext("vision3d.ext", ["radius_neighbors"])
+    return ext_module
 
 
 def radius_search_pack_mode(q_points, s_points, q_lengths, s_lengths, radius, neighbor_limit):
@@ -21,7 +30,7 @@ def radius_search_pack_mode(q_points, s_points, q_lengths, s_lengths, radius, ne
         neighbors (Tensor): the k nearest neighbors of q_points in s_points (N, k).
             Filled with M if there are less than k neighbors.
     """
-    neighbor_indices = ext_module.radius_neighbors(q_points, s_points, q_lengths, s_lengths, radius)
+    neighbor_indices = _get_ext_module().radius_neighbors(q_points, s_points, q_lengths, s_lengths, radius)
     if neighbor_limit > 0:
         neighbor_indices = neighbor_indices[:, :neighbor_limit]
     return neighbor_indices

@@ -1,10 +1,30 @@
 from typing import Tuple
 
 import torch
-from pykeops.torch import LazyTensor
 from torch import Tensor
 
 from .conversion import batch_to_pack, pack_to_batch
+
+
+_KEOPS_AVAILABLE = None
+
+
+def _keops_available() -> bool:
+    """Detect (once) whether pykeops can be imported.
+
+    pykeops imports `fcntl` (Unix-only) at import time, so on Windows (or any
+    machine without the keops toolchain) the import itself fails; running its
+    kernels also needs a C++/CUDA compiler. We then fall back to a pure-torch kNN.
+    """
+    global _KEOPS_AVAILABLE
+    if _KEOPS_AVAILABLE is None:
+        try:
+            from pykeops.torch import LazyTensor  # noqa: F401
+
+            _KEOPS_AVAILABLE = True
+        except Exception:
+            _KEOPS_AVAILABLE = False
+    return _KEOPS_AVAILABLE
 
 
 def keops_knn(q_points: Tensor, s_points: Tensor, k: int) -> Tuple[Tensor, Tensor]:
@@ -19,12 +39,31 @@ def keops_knn(q_points: Tensor, s_points: Tensor, k: int) -> Tuple[Tensor, Tenso
         knn_distance (Tensor): (*, N, k)
         knn_indices (LongTensor): (*, N, k)
     """
+    from pykeops.torch import LazyTensor
+
     num_batch_dims = q_points.dim() - 2
     xi = LazyTensor(q_points.unsqueeze(-2))  # (*, N, 1, C)
     xj = LazyTensor(s_points.unsqueeze(-3))  # (*, 1, M, C)
     dij = (xi - xj).norm2()  # (*, N, M)
     knn_distances, knn_indices = dij.Kmin_argKmin(k, dim=num_batch_dims + 1)  # (*, N, K)
     return knn_distances, knn_indices
+
+
+def torch_knn(q_points: Tensor, s_points: Tensor, k: int) -> Tuple[Tensor, Tensor]:
+    """Pure-torch fallback for `keops_knn`, with identical L2 semantics.
+
+    Uses `torch.cdist` + `topk`. Memory is O(N*M); fine for the point counts used
+    here, but heavier than keops for very large clouds.
+    """
+    dist = torch.cdist(q_points.contiguous(), s_points.contiguous())  # (*, N, M)
+    knn_distances, knn_indices = dist.topk(k, dim=-1, largest=False)  # (*, N, k)
+    return knn_distances, knn_indices
+
+
+def _knn_backend(q_points: Tensor, s_points: Tensor, k: int) -> Tuple[Tensor, Tensor]:
+    if _keops_available():
+        return keops_knn(q_points, s_points, k)
+    return torch_knn(q_points, s_points, k)
 
 
 def knn(
@@ -74,7 +113,7 @@ def knn(
         dilated_k += 1
     final_k = min(dilated_k, num_s_points)
 
-    knn_distances, knn_indices = keops_knn(q_points, s_points, final_k)  # (*, N, k)
+    knn_distances, knn_indices = _knn_backend(q_points, s_points, final_k)  # (*, N, k)
 
     if remove_nearest:
         knn_distances = knn_distances[..., 1:]
@@ -137,7 +176,7 @@ def knn_pack_mode(
     assert torch.all(torch.ge(s_lengths, k)), f"The number of support points less than {k}."
     batch_q_points, batch_q_masks = pack_to_batch(q_points, q_lengths, fill_value=inf)
     batch_s_points, batch_s_masks = pack_to_batch(s_points, s_lengths, fill_value=inf)
-    batch_knn_distances, batch_knn_indices = keops_knn(batch_q_points, batch_s_points, k)
+    batch_knn_distances, batch_knn_indices = _knn_backend(batch_q_points, batch_s_points, k)
     knn_indices, _ = batch_to_pack(batch_knn_indices, masks=batch_q_masks)
     if not return_distance:
         return knn_indices
