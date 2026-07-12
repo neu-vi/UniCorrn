@@ -15,7 +15,6 @@ accelerate launch --num_processes 4 \
     --model_config $MODEL_CONFIG_PATH \
     --trainer_config $TRAINER_CONFIG_PATH \
     --resume_ckpt_path $CKPT_PATH \
-    --restore_training_state \
     --output_dir $OUTPUT_DIR \
     --batch_size 4 \
     --accum_iter 1 \
