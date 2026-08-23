@@ -46,9 +46,9 @@ def registration_with_pnp_ransac(
             [corr_pixels[..., 1], corr_pixels[..., 0]], axis=-1
         )  # (h, w) -> (w, h)
 
-    corr_points = corr_points.astype(np.float)
-    corr_pixels = corr_pixels.astype(np.float)
-    intrinsics = intrinsics.astype(np.float)
+    corr_points = corr_points.astype(float)
+    corr_pixels = corr_pixels.astype(float)
+    intrinsics = intrinsics.astype(float)
 
     _, axis_angle, translation, _ = cv2.solvePnPRansac(
         corr_points,

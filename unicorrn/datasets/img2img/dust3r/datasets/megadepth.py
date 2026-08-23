@@ -44,16 +44,16 @@ class MegaDepth(BaseStereoViewDataset):
         scenes = (scene,) if isinstance(scene, str) else tuple(scene)
         scene_id = [s.startswith(scenes) for s in self.all_scenes]
         assert any(scene_id), 'no scene found'
-        valid = np.in1d(self.pairs['scene_id'], np.nonzero(scene_id)[0])
+        valid = np.isin(self.pairs['scene_id'], np.nonzero(scene_id)[0])
         if instances:
             image_id = [i.startswith(instances) for i in self.all_images]
             image_id = np.nonzero(image_id)[0]
             assert len(image_id), 'no instance found'
             # both together?
             if len(instances) == 2:
-                valid &= np.in1d(self.pairs['im1_id'], image_id) & np.in1d(self.pairs['im2_id'], image_id)
+                valid &= np.isin(self.pairs['im1_id'], image_id) & np.isin(self.pairs['im2_id'], image_id)
             else:
-                valid &= np.in1d(self.pairs['im1_id'], image_id) | np.in1d(self.pairs['im2_id'], image_id)
+                valid &= np.isin(self.pairs['im1_id'], image_id) | np.isin(self.pairs['im2_id'], image_id)
 
         if opposite:
             valid = ~valid

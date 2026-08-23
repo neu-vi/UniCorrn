@@ -119,7 +119,7 @@ def make_open3d_axis(axis_vector=None, origin=None, scale=1.0):
     if origin is None:
         origin = np.zeros(3)
     if axis_vector is None:
-        axis_vector = np.array([0, 0, 1], dtype=np.float)
+        axis_vector = np.array([0, 0, 1], dtype=float)
     axis_vector = axis_vector * scale
     axis_point = origin + axis_vector
     points = np.stack([origin, axis_point], axis=0)
